@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tata EV Sales Hub — One block per car</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-car-bolt"></i></div>
+        <div>
+          <h1>Tata EV Sales Hub</h1>
+          <div class="subtitle">One block per car — click to reveal variants & prices</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="search" placeholder="Search model or variant..." />
+        <button id="exportCsv" class="btn">Export CSV</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <!-- left: one card per model -->
+      <aside class="blocks">
+        <div id="blocksGrid" class="blocks-grid"></div>
+      </aside>
+
+      <!-- right: details panel with variant selector -->
+      <aside class="details" id="detailsPanel">
+        <div class="empty">
+          <i class="fa-solid fa-hand-pointer"></i>
+          <p>Select a car block to reveal variants and prices</p>
+        </div>
+
+        <div id="detailContent" class="detail-content" style="display:none;"></div>
+      </aside>
+    </section>
+
+    <footer>
+      <small>Arish Ahmad .ev </small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
