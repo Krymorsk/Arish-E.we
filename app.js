@@ -8,7 +8,7 @@ const cars = [
   {
     id: 'tiago-ev',
     model: 'Tiago EV',
-    image: 'images/tiago-ev.jpg',
+    image: 'tiago-ev.jpg',
     variants: [
       { id: 'tiago-mr-xe', name: 'MR XE', price_ex_showroom: 799000, tcs: 0, insurance: 29000 },
       { id: 'tiago-mr-xt', name: 'MR XT', price_ex_showroom: 899000, tcs: 0, insurance: 31000 },
@@ -22,7 +22,7 @@ const cars = [
   {
     id: 'punch-ev',
     model: 'Punch EV',
-    image: 'images/punch-ev.jpg',
+    image: 'punch-ev.jpg',
     variants: [
       { id: 'punch-smart', name: 'Smart', price_ex_showroom: 999000, tcs: 0, insurance: 34000 },
       { id: 'punch-smart-plus', name: 'Smart +', price_ex_showroom: 1114000, tcs: 0, insurance: 36000 },
@@ -39,7 +39,7 @@ const cars = [
   {
     id: 'nexon-ev',
     model: 'Nexon.ev',
-    image: 'images/nexon-ev.jpg',
+    image: 'nexon-ev.jpg',
     variants: [
       { id: 'nexon-3.0-creative-mr', name: '3.0 Creative + MR', price_ex_showroom: 1249000, tcs: 0, insurance: 46000 },
       { id: 'nexon-3.0-creative-45', name: '3.0 Creative 45', price_ex_showroom: 1399000, tcs: 0, insurance: 50000 },
@@ -55,7 +55,7 @@ const cars = [
   {
     id: 'curvv-ev',
     model: 'Curvv EV',
-    image: 'images/curvv-ev.jpg',
+    image: 'curvv-ev.jpg',
     variants: [
       { id: 'curvv-accomplished-55', name: 'Accomplished 55', price_ex_showroom: 1925000, tcs: 0, insurance: 90000 },
       { id: 'curvv-accomplished-s-45', name: 'Accomplished + S 45', price_ex_showroom: 1929000, tcs: 0, insurance: 91000 },
@@ -71,7 +71,7 @@ const cars = [
   {
     id: 'harrier-ev',
     model: 'Harrier.ev',
-    image: 'images/harrier-ev.jpg',
+    image: 'harrier-ev.jpg',
     variants: [
       { id: 'harrier-65-adventure', name: '65 (Adventure)', price_ex_showroom: null, tcs: null, insurance: null },
       { id: 'harrier-75-adventure-s', name: '75 (Adventure S)', price_ex_showroom: null, tcs: null, insurance: null },
