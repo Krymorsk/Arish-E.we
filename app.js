@@ -8,7 +8,7 @@ const cars = [
   {
     id: 'tiago-ev',
     model: 'Tiago EV',
-    image: 'tiago-ev.jpg',
+    image: 'images/tiago-ev.jpg',
     variants: [
       { id: 'tiago-mr-xe', name: 'MR XE', price_ex_showroom: 799000, tcs: 0, insurance: 29000 },
       { id: 'tiago-mr-xt', name: 'MR XT', price_ex_showroom: 899000, tcs: 0, insurance: 31000 },
@@ -22,7 +22,7 @@ const cars = [
   {
     id: 'punch-ev',
     model: 'Punch EV',
-    image: 'punch-ev.jpg',
+    image: 'images/punch-ev.jpg',
     variants: [
       { id: 'punch-smart', name: 'Smart', price_ex_showroom: 999000, tcs: 0, insurance: 34000 },
       { id: 'punch-smart-plus', name: 'Smart +', price_ex_showroom: 1114000, tcs: 0, insurance: 36000 },
@@ -39,7 +39,7 @@ const cars = [
   {
     id: 'nexon-ev',
     model: 'Nexon.ev',
-    image: 'nexon-ev.jpg',
+    image: 'images/nexon-ev.jpg',
     variants: [
       { id: 'nexon-3.0-creative-mr', name: '3.0 Creative + MR', price_ex_showroom: 1249000, tcs: 0, insurance: 46000 },
       { id: 'nexon-3.0-creative-45', name: '3.0 Creative 45', price_ex_showroom: 1399000, tcs: 0, insurance: 50000 },
@@ -55,7 +55,7 @@ const cars = [
   {
     id: 'curvv-ev',
     model: 'Curvv EV',
-    image: 'curvv-ev.jpg',
+    image: 'images/curvv-ev.jpg',
     variants: [
       { id: 'curvv-accomplished-55', name: 'Accomplished 55', price_ex_showroom: 1925000, tcs: 0, insurance: 90000 },
       { id: 'curvv-accomplished-s-45', name: 'Accomplished + S 45', price_ex_showroom: 1929000, tcs: 0, insurance: 91000 },
@@ -71,7 +71,7 @@ const cars = [
   {
     id: 'harrier-ev',
     model: 'Harrier.ev',
-    image: 'harrier-ev.jpg',
+    image: 'images/harrier-ev.jpg',
     variants: [
       { id: 'harrier-65-adventure', name: '65 (Adventure)', price_ex_showroom: null, tcs: null, insurance: null },
       { id: 'harrier-75-adventure-s', name: '75 (Adventure S)', price_ex_showroom: null, tcs: null, insurance: null },
@@ -94,21 +94,122 @@ const exportCsvBtn = document.getElementById('exportCsv');
 const notesKey = 'tata_ev_notes_price_v4';
 let notes = JSON.parse(localStorage.getItem(notesKey) || '{}');
 
+/* ---------- Calculator Configuration ---------- */
+const FUEL_CONFIG = {
+  petrol: { kmpl: 15, pricePerUnit: 96, unit: 'litre' },
+  diesel: { kmpl: 20, pricePerUnit: 87, unit: 'litre' },
+  cng: { kmpl: 25, pricePerUnit: 96, unit: 'kg' }
+};
+
 /* ---------- helpers ---------- */
 function formatRupee(value){
   if(value === null || value === undefined || value === '') return '—';
   if(isNaN(Number(value))) return String(value);
   return '₹ ' + Number(value).toLocaleString();
 }
+
+function formatRupeeRounded(value) {
+  return '₹ ' + Math.round(value).toLocaleString();
+}
+
 function computeOnRoad(v){
   const ex = Number(v.price_ex_showroom) || 0;
   const t = Number(v.tcs) || 0;
   const ins = Number(v.insurance) || 0;
   if(ex === 0 && t === 0 && ins === 0) return null;
-  const onroad = ex + t + ins;
-  return onroad;
+  return ex + t + ins;
 }
+
 function safeNum(x){ return (x === null || x === undefined || isNaN(Number(x))) ? null : Number(x); }
+
+/* ---------- Calculator Functions ---------- */
+function validateCalculatorInputs(years, distance, costKwh) {
+  const errors = [];
+  if (!years || years <= 0) errors.push('Years must be greater than 0');
+  if (!distance || distance <= 0) errors.push('Distance must be greater than 0');
+  if (costKwh < 0) errors.push('Energy cost cannot be negative');
+  return errors;
+}
+
+function calculateFuelCost(distance, fuelType) {
+  const config = FUEL_CONFIG[fuelType];
+  if (!config) return null;
+  const unitsConsumed = distance / config.kmpl;
+  const totalCost = unitsConsumed * config.pricePerUnit;
+  return { unitsConsumed, totalCost };
+}
+
+function calculateEVCost(distance, batteryKwh, rangeKm, costPerKwh) {
+  if (!batteryKwh || !rangeKm || batteryKwh <= 0 || rangeKm <= 0) return null;
+  const energyPerKm = batteryKwh / rangeKm;
+  const totalKwh = energyPerKm * distance;
+  const totalCost = totalKwh * costPerKwh;
+  return { energyPerKm, totalKwh, totalCost };
+}
+
+function calculateSavings(evCost, otherCost) {
+  if (evCost === null || otherCost === null) return null;
+  return otherCost - evCost;
+}
+
+function generateCalculatorReport(years, distance, evResult, fuelResults) {
+  const kmPerYear = distance / years;
+  let report = `Period: ${years} year(s)\n`;
+  report += `Total distance: ${distance.toLocaleString()} km\n`;
+  report += `Average per year: ${kmPerYear.toLocaleString()} km/year\n\n`;
+
+  // EV section
+  if (evResult) {
+    report += `EV:\n`;
+    report += `  Energy used: ${evResult.totalKwh.toFixed(1)} kWh\n`;
+    report += `  Total cost: ${formatRupeeRounded(evResult.totalCost)}\n`;
+    report += `  Per year: ${formatRupeeRounded(evResult.totalCost / years)}\n\n`;
+  } else {
+    report += `EV cost: Not available for this model\n\n`;
+  }
+
+  // Fuel sections
+  Object.entries(fuelResults).forEach(([fuelType, result]) => {
+    const config = FUEL_CONFIG[fuelType];
+    const label = fuelType.toUpperCase();
+    report += `${label} (${config.kmpl} km/${config.unit} @ ₹${config.pricePerUnit}):\n`;
+    report += `  Total: ${formatRupeeRounded(result.totalCost)}\n`;
+    report += `  Per year: ${formatRupeeRounded(result.totalCost / years)}\n\n`;
+  });
+
+  // Savings section
+  if (evResult) {
+    report += `SAVINGS vs EV:\n`;
+    Object.entries(fuelResults).forEach(([fuelType, result]) => {
+      const savings = calculateSavings(evResult.totalCost, result.totalCost);
+      report += `  ${fuelType.charAt(0).toUpperCase() + fuelType.slice(1)}: ${formatRupeeRounded(savings)}\n`;
+    });
+  }
+
+  return report;
+}
+
+function runCalculator(years, distance, costKwh, batteryKwh, rangeKm) {
+  // Validate inputs
+  const errors = validateCalculatorInputs(years, distance, costKwh);
+  if (errors.length > 0) {
+    return { success: false, error: errors.join('\n') };
+  }
+
+  // Calculate fuel costs
+  const fuelResults = {};
+  Object.keys(FUEL_CONFIG).forEach(fuelType => {
+    fuelResults[fuelType] = calculateFuelCost(distance, fuelType);
+  });
+
+  // Calculate EV cost
+  const evResult = calculateEVCost(distance, batteryKwh, rangeKm, costKwh);
+
+  // Generate report
+  const report = generateCalculatorReport(years, distance, evResult, fuelResults);
+
+  return { success: true, report, evResult, fuelResults };
+}
 
 /* ---------- render model cards (one per car) ---------- */
 function createModelCard(car){
@@ -252,92 +353,24 @@ function showCarDetails(car){
       </div>
     `;
 
-    // Calculator logic
+    // Calculator logic using refactored functions
     document.getElementById('btnCalc').onclick = () => {
-      const years = Number(document.getElementById('calcYears').value || 0);
-      const distanceTotal = Number(document.getElementById('calcDistance').value || 0);
-      const costKwh = Number(document.getElementById('costKwh').value || 0);
+      const years = Number(document.getElementById('calcYears').value) || 0;
+      const distanceTotal = Number(document.getElementById('calcDistance').value) || 0;
+      const costKwh = Number(document.getElementById('costKwh').value) || 0;
+      const batteryKwh = safeNum(battery);
+      const rangeKm = safeNum(range);
 
-      // fuel assumptions (as requested)
-      const petrolKmPerL = 15; const petrolPriceL = 96;
-      const dieselKmPerL = 20; const dieselPriceL = 87;
-      const cngKmPerKg = 25; const cngPriceKg = 96;
+      const result = runCalculator(years, distanceTotal, costKwh, batteryKwh, rangeKm);
 
-      // validate inputs
-      if (!years || years <= 0 || !distanceTotal || distanceTotal <= 0 || !costKwh || costKwh <= 0) {
-        document.getElementById('calcResult').textContent = 'Enter valid Years, Distance and Energy cost.';
-        return;
-      }
-      // EV battery & range must be present
-      if (battery === '-' || range === '-') {
-        document.getElementById('calcResult').textContent = 'Battery or range missing for this model/variant. Cannot calculate EV cost.';
+      if (!result.success) {
+        document.getElementById('calcResult').textContent = result.error;
         return;
       }
 
-      // calculations
-      const distancePerYear = distanceTotal / years;
-
-      const batteryVal = Number(battery);
-      const rangeVal = Number(range);
-      const energyPerKm = batteryVal / rangeVal; // kWh per km
-      const totalEnergy = energyPerKm * distanceTotal; // kWh for whole period
-      const evTotalCost = totalEnergy * costKwh;
-      const evCostPerYear = evTotalCost / years;
-      const evCostPerKm = evTotalCost / distanceTotal;
-
-      // petrol
-      const petrolLitresTotal = distanceTotal / petrolKmPerL;
-      const petrolTotalCost = petrolLitresTotal * petrolPriceL;
-      const petrolCostPerYear = petrolTotalCost / years;
-
-      // diesel
-      const dieselLitresTotal = distanceTotal / dieselKmPerL;
-      const dieselTotalCost = dieselLitresTotal * dieselPriceL;
-      const dieselCostPerYear = dieselTotalCost / years;
-
-      // cng
-      const cngKgTotal = distanceTotal / cngKmPerKg;
-      const cngTotalCost = cngKgTotal * cngPriceKg;
-      const cngCostPerYear = cngTotalCost / years;
-
-      // savings vs petrol/diesel/cng
-      const saveVsPetrolTotal = petrolTotalCost - evTotalCost;
-      const saveVsDieselTotal = dieselTotalCost - evTotalCost;
-      const saveVsCngTotal = cngTotalCost - evTotalCost;
-      const saveVsPetrolPct = petrolTotalCost ? (saveVsPetrolTotal / petrolTotalCost) * 100 : 0;
-      const saveVsDieselPct = dieselTotalCost ? (saveVsDieselTotal / dieselTotalCost) * 100 : 0;
-      const saveVsCngPct = cngTotalCost ? (saveVsCngTotal / cngTotalCost) * 100 : 0;
-
-      // format output nicely
-      function fmt(n, dec=0){ return n === null || n === undefined || isNaN(n) ? '—' : (dec===0 ? Number(n).toLocaleString() : Number(n).toLocaleString(undefined,{maximumFractionDigits:dec})) }
-      const outLines = [
-        `Period: ${years} year(s) — Total distance: ${Number(distanceTotal).toLocaleString()} km (${fmt(distancePerYear,0)} km/year)`,
-        ``,
-        `ELECTRIC VEHICLE (EV)`,
-        ` kWh needed (total): ${fmt(totalEnergy,2)} kWh`,
-        ` EV cost (total): ₹ ${fmt(evTotalCost,0)}`,
-        ` EV cost / year: ₹ ${fmt(evCostPerYear,0)}  —  EV cost / km: ₹ ${fmt(evCostPerKm,3)}`,
-        ``,
-        `PETROL (avg ${petrolKmPerL} km/l @ ₹${petrolPriceL}/L)`,
-        ` Petrol litres (total): ${fmt(petrolLitresTotal,2)} L`,
-        ` Petrol cost (total): ₹ ${fmt(petrolTotalCost,0)}  —  /year: ₹ ${fmt(petrolCostPerYear,0)}`,
-        ``,
-        `DIESEL (avg ${dieselKmPerL} km/l @ ₹${dieselPriceL}/L)`,
-        ` Diesel litres (total): ${fmt(dieselLitresTotal,2)} L`,
-        ` Diesel cost (total): ₹ ${fmt(dieselTotalCost,0)}  —  /year: ₹ ${fmt(dieselCostPerYear,0)}`,
-        ``,
-        `CNG (avg ${cngKmPerKg} km/kg @ ₹${cngPriceKg}/kg)`,
-        ` CNG required (total): ${fmt(cngKgTotal,2)} kg`,
-        ` CNG cost (total): ₹ ${fmt(cngTotalCost,0)}  —  /year: ₹ ${fmt(cngCostPerYear,0)}`,
-        ``,
-        `SAVINGS vs EV (total over ${years} year(s)):`,
-        ` vs Petrol: ₹ ${fmt(saveVsPetrolTotal,0)} (${fmt(saveVsPetrolPct,1)}%)`,
-        ` vs Diesel: ₹ ${fmt(saveVsDieselTotal,0)} (${fmt(saveVsDieselPct,1)}%)`,
-        ` vs CNG: ₹ ${fmt(saveVsCngTotal,0)} (${fmt(saveVsCngPct,1)}%)`
-      ];
-
-      document.getElementById('calcResult').textContent = outLines.join('\n');
+      document.getElementById('calcResult').textContent = result.report;
     };
+
 
     // notes save
     document.getElementById('saveNoteBtn').onclick = () => {
